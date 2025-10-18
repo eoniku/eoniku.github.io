@@ -1,0 +1,22 @@
+{
+    "baseURL": "https://eoniku.github.io/",
+    "languageCode": "ja-jp",
+    "title": "のんのんだより",
+    "theme": "hugo-heisei",
+    "pagination": {
+        "disableAliases": false,
+        "pagerSize": 10,
+        "path": "page"
+    },
+    "params": {
+        "description": "株スイングトレードとWarframeについて"
+    },
+    "markup": {
+        "goldmark": {
+            "renderer": {
+                "unsafe": true,
+                "hardWraps": true
+            }
+        }
+    }
+}
