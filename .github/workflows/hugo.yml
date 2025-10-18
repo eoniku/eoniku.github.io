@@ -1,10 +1,9 @@
-# .github/workflows/hugo.yml
-name: Build & Deploy Hugo (Extended, Sass)
+name: Build & Deploy Hugo (User Page)
 
 on:
   push:
-    branches: [ main ]    # ←必要に応じて変更
-  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,44 +16,23 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest   # Linux推奨（配布バイナリの展開が安定）
+    runs-on: ubuntu-latest
     env:
       HUGO_ENV: production
-      # baseURL は config.* で設定するのがベスト。必要なら以下で上書き可:
-      # HUGO_BASEURL: https://<user>.github.io/<repo>/
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          submodules: true           # テーマを submodule で管理している場合
-          fetch-depth: 0             # .GitInfo / lastmod 用
+          submodules: true
+          fetch-depth: 0
 
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
+      - uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: '0.151.0'
           extended: true
 
       - name: Build
-        run: hugo --minify --gc --enableGitInfo
+        run: hugo --minify --gc --cleanDestinationDir --enableGitInfo
 
-      # キャッシュ：Hugo の生成物 & Go Template の中間生成物
-      - name: Cache Hugo resources
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/hugo_cache
-            resources/_gen
-          key: ${{ runner.os }}-hugo-${{ hashFiles('**/*') }}
-          restore-keys: |
-            ${{ runner.os }}-hugo-
-
-      - name: Build
-        run: |
-          hugo --minify --gc --enableGitInfo
-
-      # ===== GitHub Pages 用（不要なら下3ステップを削除）=====
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
@@ -64,5 +42,4 @@ jobs:
           path: ./public
 
       - name: Deploy to GitHub Pages
-        id: deployment
         uses: actions/deploy-pages@v4
