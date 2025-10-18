@@ -1,0 +1,76 @@
+# .github/workflows/hugo.yml
+name: Build & Deploy Hugo (Extended, Sass)
+
+on:
+  push:
+    branches: [ main ]    # ←必要に応じて変更
+  pull_request:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   # Linux推奨（配布バイナリの展開が安定）
+    env:
+      HUGO_ENV: production
+      # baseURL は config.* で設定するのがベスト。必要なら以下で上書き可:
+      # HUGO_BASEURL: https://<user>.github.io/<repo>/
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true           # テーマを submodule で管理している場合
+          fetch-depth: 0             # .GitInfo / lastmod 用
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.151.0'    # ← 指定バージョン
+          extended: true             # ← Sass/SCSS 対応の Extended を必須指定
+
+      # （任意）PostCSS/Autoprefixer を使うテーマ向け
+      - name: Setup Node (for PostCSS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install Node deps (optional)
+        if: hashFiles('package-lock.json') != ''
+        run: npm ci
+
+      # キャッシュ：Hugo の生成物 & Go Template の中間生成物
+      - name: Cache Hugo resources
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/hugo_cache
+            resources/_gen
+          key: ${{ runner.os }}-hugo-${{ hashFiles('**/*') }}
+          restore-keys: |
+            ${{ runner.os }}-hugo-
+
+      - name: Build
+        run: |
+          hugo --minify --gc --enableGitInfo
+
+      # ===== GitHub Pages 用（不要なら下3ステップを削除）=====
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
