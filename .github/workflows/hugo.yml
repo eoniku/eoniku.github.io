@@ -33,19 +33,11 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: '0.151.0'    # ← 指定バージョン
-          extended: true             # ← Sass/SCSS 対応の Extended を必須指定
+          hugo-version: '0.151.0'
+          extended: true
 
-      # （任意）PostCSS/Autoprefixer を使うテーマ向け
-      - name: Setup Node (for PostCSS)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-          cache: 'npm'
-
-      - name: Install Node deps (optional)
-        if: hashFiles('package-lock.json') != ''
-        run: npm ci
+      - name: Build
+        run: hugo --minify --gc --enableGitInfo
 
       # キャッシュ：Hugo の生成物 & Go Template の中間生成物
       - name: Cache Hugo resources
