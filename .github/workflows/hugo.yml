@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HUGO_VERSION: 0.128.0
-      DART_SASS_EMBEDDED_VERSION: 1.79.5   # 例：必要に応じて更新
+      DART_SASS_VERSION: 1.93.2
     steps:
       - name: Install Hugo (extended)
         run: |
@@ -39,14 +39,15 @@ jobs:
             https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb
           sudo dpkg -i ${{ runner.temp }}/hugo.deb
 
-      # ← これに置き換え（snap の dart-sass は削除）
-      - name: Install Dart Sass Embedded
+      # ← これだけでOK（Embedded不要）
+      - name: Install Dart Sass
         run: |
-          curl -L -o ${{ runner.temp }}/dse.tar.gz \
-            https://github.com/sass/dart-sass-embedded/releases/download/${DART_SASS_EMBEDDED_VERSION}/dart-sass-embedded-${DART_SASS_EMBEDDED_VERSION}-linux-x64.tar.gz
-          sudo tar -xzf ${{ runner.temp }}/dse.tar.gz -C /usr/local/bin --strip-components=1 dart-sass-embedded
-          dart-sass-embedded --version
-
+          curl -L -o ${{ runner.temp }}/dart-sass.tar.gz \
+            https://github.com/sass/dart-sass/releases/download/${DART_SASS_VERSION}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz
+          tar -xzf ${{ runner.temp }}/dart-sass.tar.gz -C ${{ runner.temp }}
+          echo "${{ runner.temp }}/dart-sass" >> $GITHUB_PATH
+          dart-sass/sass --version
+      
       - name: Checkout
         uses: actions/checkout@v4
         with:
