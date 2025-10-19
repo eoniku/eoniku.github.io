@@ -7,10 +7,13 @@
   <header>
     {{ partial "header.html" . }}
   </header>
-  <div class="container m-auto">
-    <main>
+  <div class="max-w-screen-lg mx-auto flex flex-col lg:flex-row lg:items-start lg:gap-8">
+    <main class="flex-1">
       {{ block "main" . }}{{ end }}
     </main>
+    <aside class="w-full lg:w-60 bg-gray-300 p-4">
+      {{ partial "sidebar.html" . }}
+    </aside>
   </div>
   <footer>
     {{ partial "footer.html" . }}
