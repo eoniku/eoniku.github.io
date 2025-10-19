@@ -8,6 +8,12 @@
         "pagerSize": 10,
         "path": "page"
     },
+   "outputs": {
+    "home": ["HTML", "RSS"],
+    "section": ["HTML", "RSS"],
+    "taxonomy": ["HTML", "RSS"],
+    "term": ["HTML", "RSS"]
+  },
     "params": {
         "description": "株スイングトレードとWarframeについて"
     },
@@ -18,5 +24,33 @@
                 "hardWraps": true
             }
         }
-    }
+    },
+   "build": {
+      "buildStats": {
+         "enable": true
+      },
+      "cachebusters": [
+         {
+            "source": "assets/notwatching/hugo_stats\\.json",
+            "target": "css"
+         },
+         {
+            "source": "(postcss|tailwind)\\.config\\.js",
+            "target": "css"
+         }
+      ]
+   },
+   "module": {
+      "mounts": [
+         {
+            "source": "assets",
+            "target": "assets"
+         },
+         {
+            "disableWatch": true,
+            "source": "hugo_stats.json",
+            "target": "assets/notwatching/hugo_stats.json"
+         }
+      ]
+   }
 }

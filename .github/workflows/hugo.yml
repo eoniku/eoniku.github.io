@@ -43,3 +43,32 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+
+      # 例) デプロイ（upload/deploy-pages）後に実行
+      - name: Notify Blogmura (XML-RPC ping)
+        if: ${{ success() }}
+        shell: bash
+        env:
+          PING_URL: ${{ secrets.BLOGMURA_PING_URL }}
+        run: |
+          BLOG_NAME="のんのんだより"
+          BLOG_URL="https://eoniku.github.io/"
+          cat > payload.xml <<'XML'
+          <?xml version="1.0"?>
+          <methodCall>
+            <methodName>weblogUpdates.ping</methodName>
+            <params>
+              <param><value><string>__BLOG_NAME__</string></value></param>
+              <param><value><string>__BLOG_URL__</string></value></param>
+            </params>
+          </methodCall>
+          XML
+          sed -i "s|__BLOG_NAME__|${BLOG_NAME//&/&amp;}|g" payload.xml
+          sed -i "s|__BLOG_URL__|${BLOG_URL}|g" payload.xml
+
+          curl -sS -H "Content-Type: text/xml" \
+            --data @payload.xml \
+            "$PING_URL" | tee ping_response.xml
+
+          # 失敗検知（簡易）
+          grep -qi "<fault>" ping_response.xml && { echo "Blogmura ping fault"; exit 1; }
