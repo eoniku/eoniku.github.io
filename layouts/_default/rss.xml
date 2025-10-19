@@ -1,0 +1,28 @@
+{{- $pages := where .Site.RegularPages "Type" "not in" (slice "page") -}}
+{{- $limit := or .Site.RSS.Limit 20 -}}
+{{- $pages = first $limit $pages -}}
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ .Site.Title | html }}</title>
+    <link>{{ .Site.BaseURL }}</link>
+    <description>{{ with .Site.Params.description }}{{ . | html }}{{ else }}Recent content on {{ .Site.Title | html }}{{ end }}</description>
+    <language>{{ or .Site.LanguageCode "ja" }}</language>
+    <lastBuildDate>{{ now | time.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</lastBuildDate>
+    <atom:link href="{{ .Site.BaseURL }}index.xml" rel="self" type="application/rss+xml"/>
+
+    {{- range $pages }}
+    <item>
+      <title>{{ .Title | html }}</title>
+      <link>{{ .Permalink }}</link>
+      <guid isPermaLink="true">{{ .Permalink }}</guid>
+      <pubDate>{{ .Date | time.Format "Mon, 02 Jan 2006 15:04:05 -0700" }}</pubDate>
+      {{ with .Params.description -}}
+        <description>{{ . | html }}</description>
+      {{- else -}}
+        {{ with .Summary }}<description>{{ . | html }}</description>{{ end }}
+      {{- end }}
+    </item>
+    {{- end }}
+  </channel>
+</rss>
