@@ -50,8 +50,10 @@ jobs:
         env:
           PING_URL: ${{ secrets.BLOGMURA_PING_URL }}
         run: |
+          set -euo pipefail
+
           BLOG_NAME="のんのんだより"
-          BLOG_URL="https://eoniku.github.io/"  # ← 固定URLでOK！
+          BLOG_URL="https://eoniku.github.io/"
 
           cat > payload.xml <<'XML'
           <?xml version="1.0"?>
@@ -64,13 +66,19 @@ jobs:
           </methodCall>
           XML
 
-          sed -i "s|__BLOG_NAME__|${BLOG_NAME//&/&amp;}|g" payload.xml
+          # XMLに差し込み（& のみエスケープ）
+          BLOG_NAME_ESCAPED="${BLOG_NAME//&/&amp;}"
+          sed -i "s|__BLOG_NAME__|${BLOG_NAME_ESCAPED}|g" payload.xml
           sed -i "s|__BLOG_URL__|${BLOG_URL}|g" payload.xml
 
-          curl -sS -H "Content-Type: text/xml" \
-            --data @payload.xml \
-            "$PING_URL" | tee ping_response.xml
+          # 送信
+          curl -sS -H "Content-Type: text/xml" --data @payload.xml "$PING_URL" | tee ping_response.xml
 
-          # 簡易エラーチェック
-          grep -qi "<fault>" ping_response.xml && { echo "Blogmura ping failed"; exit 1; }
-          
+          # ---- 成否判定（fault があるときだけ失敗にする）----
+          if grep -qi "<fault>" ping_response.xml; then
+            echo "Blogmura ping fault detected"
+            exit 1
+          fi
+
+          # 追加の肯定メッセージ（任意）
+          echo "Blogmura ping OK ✅"
