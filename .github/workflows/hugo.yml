@@ -44,7 +44,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
 
-      - name: Notify Blogmura (XML-RPC ping)
+      - name: Notify Blogmura (XML-RPC extendedPing)
         if: ${{ success() }}
         shell: bash
         env:
@@ -54,31 +54,27 @@ jobs:
 
           BLOG_NAME="のんのんだより"
           BLOG_URL="https://eoniku.github.io/"
+          FEED_URL="${BLOG_URL}index.xml"
 
           cat > payload.xml <<'XML'
           <?xml version="1.0"?>
           <methodCall>
-            <methodName>weblogUpdates.ping</methodName>
+            <methodName>weblogUpdates.extendedPing</methodName>
             <params>
               <param><value><string>__BLOG_NAME__</string></value></param>
               <param><value><string>__BLOG_URL__</string></value></param>
+              <param><value><string>__FEED_URL__</string></value></param>
             </params>
           </methodCall>
           XML
 
-          # XMLに差し込み（& のみエスケープ）
-          BLOG_NAME_ESCAPED="${BLOG_NAME//&/&amp;}"
-          sed -i "s|__BLOG_NAME__|${BLOG_NAME_ESCAPED}|g" payload.xml
+          sed -i "s|__BLOG_NAME__|${BLOG_NAME//&/&amp;}|g" payload.xml
           sed -i "s|__BLOG_URL__|${BLOG_URL}|g" payload.xml
+          sed -i "s|__FEED_URL__|${FEED_URL}|g" payload.xml
 
-          # 送信
           curl -sS -H "Content-Type: text/xml" --data @payload.xml "$PING_URL" | tee ping_response.xml
 
-          # ---- 成否判定（fault があるときだけ失敗にする）----
           if grep -qi "<fault>" ping_response.xml; then
-            echo "Blogmura ping fault detected"
-            exit 1
+            echo "Blogmura ping fault detected"; exit 1
           fi
-
-          # 追加の肯定メッセージ（任意）
-          echo "Blogmura ping OK ✅"
+          echo "Blogmura extendedPing OK ✅"
