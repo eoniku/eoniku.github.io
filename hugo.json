@@ -6,6 +6,7 @@
    "timeZone": "Asia/Tokyo",
    "relativeURLs": false,
    "canonifyURLs": true,
+   "googleAnalytics": "G-XC19CPFQGX",
    "pagination": {
       "disableAliases": false,
       "pagerSize": 10,
